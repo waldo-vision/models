@@ -5,3 +5,5 @@
   - pandas
   - requests
   - validators
+- The above list will most likely be outdated over time, or entirely removed.
+  - Consider using the `requirements.txt` instead.
