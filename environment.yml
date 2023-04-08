@@ -1,6 +1,7 @@
 name: waldo-dev-env
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - pandas
   - requests
