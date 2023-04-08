@@ -1,3 +1,4 @@
 #!/bin/bash
 cd ..
-conda list -e > requirements.txt
+conda env export --from-history > environment.yml
+sed -i '$ d' environment.yml

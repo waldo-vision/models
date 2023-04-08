@@ -1,0 +1,7 @@
+name: waldo-dev-env
+channels:
+  - defaults
+dependencies:
+  - validators
+  - requests
+  - pandas
