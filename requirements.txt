@@ -50,4 +50,5 @@ urllib3=1.26.15=py311h06a4308_0
 validators=0.18.2=pyhd3eb1b0_0
 wheel=0.38.4=py311h06a4308_0
 xz=5.2.10=h5eee18b_1
+youtube-dl=2021.12.17=pypi_0
 zlib=1.2.13=h5eee18b_0
