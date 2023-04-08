@@ -35,7 +35,7 @@ def is_valid_youtube_url(url):
 def parse_data(data):
     """
     Convert the data to a pandas DataFrame. If you find a better solution, please fix.
-    Were expecting data that looks like this:
+    We're expecting data that looks like this:
     {"page": 0,
     "totalPages": 100,
     "gameplay": [{"uuid": "38r8hnf80ew-35uhehrfnjea-wryhghjvsdk",
