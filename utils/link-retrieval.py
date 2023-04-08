@@ -1,18 +1,21 @@
-import requests
-import pandas as pd
 import argparse
-import validators
 import json
-import re
 import os
+import re
 
+import pandas as pd
+import requests
+import validators
 
 #Setup command line arguments
 parser = argparse.ArgumentParser(description="Get URL's from API and store them locally")
-parser.add_argument("-e", "--endpoint", help='Target URL On Server', required=False, default="https://waldo.vision/api/trpc/urls", type=str)
-parser.add_argument("-k", "--key", help='API Key', required=False, default=(os.environ.get("WALDO_API_KEY")), type=str)
+parser.add_argument("-e", "--endpoint", help='Target URL On Server', required=False,
+                    default="https://waldo.vision/api/trpc/urls", type=str)
+parser.add_argument("-k", "--key", help='API Key', required=False,
+                    default=(os.environ.get("WALDO_API_KEY")), type=str)
 parser.add_argument("-o", "--output", help='Folder To Store Output', required=True, type=str)
-parser.add_argument("-r", "--requirements", help='Specfications for links retrieved', default='{"minReviews": 25, "rating": 90}', required=False, type=str)
+parser.add_argument("-r", "--requirements", help='Specfications for links retrieved',
+                    default='{"minReviews": 25, "rating": 90}', required=False, type=str)
 
 args = vars(parser.parse_args())
 
@@ -65,6 +68,8 @@ def main(requirements):
         os.makedirs(download_dir)
     # Save the downloaded links to a file
         valid_urls_df = pd.DataFrame(valid_urls)
-        valid_urls_df.to_csv((os.path.join(download_dir + "links.csv")), index=True, columns=["uuid","url"])
+        valid_urls_df.to_csv((os.path.join(download_dir + "links.csv")),
+                            index=True, columns=["uuid","url"])
+        
 if __name__ == "__main__":
     main(dict(args['requirements']))
