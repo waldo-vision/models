@@ -1,5 +1,6 @@
 """
-Requests youtube URLs from waldo api, validates them, and saves to a csv file
+Requests youtube URLs from waldo api that meet requirements
+Validates fetched URLs, and saves them to a csv file
 """
 import argparse
 import json
@@ -10,7 +11,7 @@ import pandas as pd
 import requests
 import validators
 
-#Setup command line arguments
+# Setup command line arguments
 parser = argparse.ArgumentParser(description="Get URL's from API and store them locally")
 parser.add_argument("-e", "--endpoint", help='Target URL On Server', required=False,
                     default="https://waldo.vision/api/trpc/urls", type=str)
