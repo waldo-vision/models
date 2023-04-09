@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: '3.11'
     steps:
     - name: Set up Conda environment with Python ${{ matrix.python-version }}
     - uses: actions/checkout@v3
