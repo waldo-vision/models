@@ -17,7 +17,7 @@ parser.add_argument("-r", "--max_resolution", help='The maximum resolution downl
 
 args = vars(parser.parse_args())
 
-def download_best_video(row):
+def download_best_video(row, max_res, output_path):
     """Downloads the Highest resolution, Highest FPS stream of a given video URL from YouTube"""
     # create YT object
     uuid = row['uuid']
@@ -35,7 +35,7 @@ def download_best_video(row):
     available_res= [*set(available_resolutions)]
 
     # get highest resolution not greater than max res
-    best_res = max([int(res) for res in available_res if int(res) <= int(args['max_resolution'])])
+    best_res = max([int(res) for res in available_res if int(res) <= int(max_res)])
     best_res = str(best_res) + 'p'
 
     # get highest fps stream at best res
@@ -44,24 +44,37 @@ def download_best_video(row):
                                 .last()
 
     # download video
-    best_stream.download(output_path=args['output'],
-                        filename=f'{uuid}.mp4',
-                        skip_existing=True,
-                        max_retries=1)
+    best_stream.download(output_path=output_path,
+                         filename=f'{uuid}.mp4',
+                         skip_existing=True,
+                         max_retries=1)
 
     return True
 
-def main(path_to_csv):
-    """Download URLs from input CSV from YouTube"""
+def download_videos_from_csv(input_path, output_path, max_res):
+    """Reads URLs into dataframe and downloads each one"""
+
     # read csv into dataframe
-    print(f'Reading Input CSV: {path_to_csv}')
-    urls_df = pd.read_csv(path_to_csv)
+    print(f'Reading Input CSV: {input_path}')
+    urls_df = pd.read_csv(input_path)
 
     # download all videos
     print('Beginning Downloads...')
-    urls_df.apply(download_best_video, axis=1)
+    urls_df.apply(download_best_video,
+                  max_res=max_res,
+                  output_path=output_path,
+                  axis=1)
 
     print('Downloads Complete')
 
+    return
+
+def main():
+    """Download all YouTube URLs from an input CSV"""
+    # read csv into dataframe
+    download_videos_from_csv(args['input'],
+                             args['output'],
+                             args['max_resolution'])
+
 if __name__ == "__main__":
-    main(args['input'])
+    main()
