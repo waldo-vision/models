@@ -1,9 +1,14 @@
+"""
+Contains the default video cropper class.
+This class can be used to convert a video into cropped frames.
+"""
 from typing import Any, Tuple
 import cv2
-from common import ensure_dir_exists
+from utils.common import ensure_dir_exists
 
 
 class DefaultVideoCropper:
+    # pylint: disable=too-few-public-methods
     """
     Creates a video cropper object which can crop and save
     the frames of a video to a specified output directory

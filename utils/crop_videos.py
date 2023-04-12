@@ -1,5 +1,8 @@
+"""
+Takes a given video and outputs cropped frames of the video.
+"""
 import argparse
-from DefaultVideoCropper import DefaultVideoCropper
+from utils.default_video_cropper import DefaultVideoCropper
 
 
 parser = argparse.ArgumentParser(
