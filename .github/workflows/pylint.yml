@@ -21,6 +21,7 @@ jobs:
         pip install pandas
         pip install requests
         pip install validators
+        pip install opencv-python
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py')
