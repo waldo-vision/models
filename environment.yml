@@ -8,3 +8,4 @@ dependencies:
   - validators
   - pylint
   - opencv
+  - pytube
