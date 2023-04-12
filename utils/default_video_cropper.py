@@ -9,7 +9,7 @@ from utils.common import ensure_dir_exists
 
 class DefaultVideoCropper:
     # pylint: disable=too-few-public-methods
-    # pylint --disable=E1101
+    # pylint: disable=no-member
     """
     Creates a video cropper object which can crop and save
     the frames of a video to a specified output directory
