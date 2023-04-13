@@ -7,4 +7,5 @@ dependencies:
   - requests
   - validators
   - pylint
+  - opencv
   - pytube
