@@ -26,7 +26,8 @@ args = vars(parser.parse_args())
 
 def extract_vid_uuid(vid_path: str) -> str:
     """Extracts uuid from video path"""
-    vid_name = vid_path.split("\\")[-1]
+    vid_path = vid_path.replace("\\","/")
+    vid_name = vid_path.split("/")[-1]
     uuid = vid_name.split(".")[0]
     return uuid
 
