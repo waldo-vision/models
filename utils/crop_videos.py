@@ -2,8 +2,8 @@
 Takes a given video and outputs cropped frames of the video.
 """
 import argparse
+import pathlib
 from utils.default_video_cropper import DefaultVideoCropper
-
 
 parser = argparse.ArgumentParser(
     description="Crop a video and store frames locally", add_help=False
@@ -26,8 +26,8 @@ args = vars(parser.parse_args())
 
 def extract_vid_uuid(vid_path: str) -> str:
     """Extracts uuid from video path"""
-    vid_name = vid_path.split("\\")[-1]
-    uuid = vid_name.split(".")[0]
+    vid_path = pathlib.Path(vid_path)
+    uuid = vid_path.with_suffix("").name  # Remove file extension (.mp4,.webm)
     return uuid
 
 
