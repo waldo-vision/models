@@ -21,7 +21,7 @@ jobs:
     - name: Activate conda environment
       run: |
         conda init bash
-        source ~./bashrc
+        source /home/runner/.bashrc
         conda activate waldo-dev-env
     - name: Analyze the code with pylint
       run: |
