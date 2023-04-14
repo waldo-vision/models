@@ -10,8 +10,8 @@ jobs:
         python-version: '3.11'
     steps:
     - name: Set up Conda environment with Python ${{ matrix.python-version }}
-    - uses: actions/checkout@v3
-    - uses: s-weigand/setup-conda@v1
+      uses: actions/checkout@v3
+      uses: s-weigand/setup-conda@v1
       with:
         python-version: ${{ matrix.python-version }}
         conda-channels: 'conda-forge'
