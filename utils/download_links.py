@@ -5,6 +5,8 @@ import argparse
 
 import pandas as pd
 from pytube import YouTube
+from pytube.exceptions import VideoUnavailable, AgeRestrictedError, VideoRegionBlocked, MembersOnly
+from pytube.exceptions import LiveStreamError, RecordingUnavailable, VideoPrivate, RegexMatchError
 
 # Setup command line arguments
 parser = argparse.ArgumentParser(description="Get URL's from API and store them locally")
@@ -12,68 +14,96 @@ parser.add_argument("-i", "--input", help="Path to CSV of Youtube URLs to downlo
                     required=True, type=str)
 parser.add_argument("-o", "--output", help='Folder To Store Downloaded Videos',
                     required=True, type=str)
-parser.add_argument("-r", "--max_resolution", help='The maximum resolution downloads allowed',
+parser.add_argument("-n", "--min_resolution", help='The minimum resolution allowed',
+                    required=False, type=str, default='360')
+parser.add_argument("-x", "--max_resolution", help='The maximum resolution allowed',
                     required=False, type=str, default='1080')
 
 args = vars(parser.parse_args())
 
-def download_best_video(row, max_res, output_path):
+def download_best_video(row, min_res, max_res, output_path, max_retries=2):
     """Downloads the Highest resolution, Highest FPS stream of a given video URL from YouTube"""
-    # create YT object
-    uuid = row['uuid']
-    url = row['url']
-    yt_obj = YouTube(url)
-    print(f"Downloading UUID: {uuid} | URL:{url}")
 
-    # get list of all mp4 video streams
-    all_streams = yt_obj.streams.filter(file_extension='mp4',type='video')
+    retry = 0
+    while retry <= max_retries:
+        print(f"Downloading UUID: {row['uuid']} | URL: {row['url']}")
 
-    # get set of all available resolutions
-    available_resolutions = []
-    for stream in all_streams:
-        available_resolutions.append(stream.resolution.split('p')[0])
-    available_res= [*set(available_resolutions)]
+        # create YT object
+        try:
+            yt_obj = YouTube(row['url'])
+        except RegexMatchError:
+            print(f"Bad Video URL: {row['url']}")
+            break
 
-    # get highest resolution not greater than max res
-    best_res = max([int(res) for res in available_res if int(res) <= int(max_res)])
-    best_res = str(best_res) + 'p'
+        # get list of all mp4 video streams
+        try:
+            all_streams = yt_obj.streams.filter(file_extension='mp4',type='video')
+        except (VideoUnavailable, AgeRestrictedError, VideoRegionBlocked,
+                LiveStreamError, RecordingUnavailable, MembersOnly, VideoPrivate) as error:
+            print(f"{row['uuid']} is not available for download: {error}")
+            break
+        except KeyError:
+            retry += 1
+            print(f"Error Getting Video Streams, retrying... ({retry}/{max_retries})")
+            continue
 
-    # get highest fps stream at best res
-    best_stream = yt_obj.streams.filter(file_extension='mp4', type='video', res=str(best_res)) \
-                                .order_by('fps') \
-                                .last()
+        # get set of all available resolutions
+        available_resolutions = []
+        for stream in all_streams:
+            available_resolutions.append(stream.resolution.split('p')[0])
+        available_resolutions = [*set(available_resolutions)]
 
-    # download video
-    best_stream.download(output_path=output_path,
-                         filename=f'{uuid}.mp4',
-                         skip_existing=True,
-                         max_retries=1)
+        # get streams with resolution that meets criteria
+        good_resolutions = [int(res) for res in available_resolutions if int(res) >= int(min_res)]
+        good_resolutions = [res for res in good_resolutions if res <= int(max_res)]
+        if not good_resolutions:
+            print(f"No streams available matching resolution criteria for {row['uuid']}!")
+            break
 
-    return True
+        # get highest resolution
+        best_res = str(max(good_resolutions)) + 'p'
 
-def download_videos_from_csv(input_path, output_path, max_res):
+        # get highest fps stream at best res
+        best_stream = yt_obj.streams \
+                            .filter(file_extension='mp4', type='video', res=best_res) \
+                            .order_by('fps') \
+                            .last()
+
+        # download video
+        best_stream.download(output_path=output_path,
+                            filename=f"{row['uuid']}.mp4",
+                            skip_existing=True,
+                            max_retries=max_retries)
+
+        return True
+
+    print(f"Could not download {row['uuid']}!")
+    return False
+
+def download_videos_from_csv(input_path, output_path, min_res, max_res):
     """Reads URLs into dataframe and downloads each one"""
 
     # read csv into dataframe
     print(f'Reading Input CSV: {input_path}')
     urls_df = pd.read_csv(input_path)
+    urls_df.dropna(inplace=True)
 
     # download all videos
     print('Beginning Downloads...')
     urls_df.apply(download_best_video,
+                  min_res=min_res,
                   max_res=max_res,
                   output_path=output_path,
                   axis=1)
 
     print('Downloads Complete')
 
-    return
-
 def main():
     """Download all YouTube URLs from an input CSV"""
     # read csv into dataframe
     download_videos_from_csv(args['input'],
                              args['output'],
+                             args['min_resolution'],
                              args['max_resolution'])
 
 if __name__ == "__main__":
