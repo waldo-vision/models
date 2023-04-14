@@ -23,6 +23,7 @@ jobs:
         pip install requests
         pip install validators
         pip install opencv-python
+        pip install pytube
         conda env update --file environment.yml
     - name: Analysing the code with pylint
       run: |
