@@ -37,24 +37,23 @@ def parse_data(data):
                  "ytUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}]
     }
     """
-
+    print(data)
     response_dataframe = pd.DataFrame(data)
     response_list = response_dataframe['gameplay'].tolist()
     response_dataframe = pd.DataFrame(columns=['id','url','game'])
     for obj in response_list:
         obj_dataframe = pd.DataFrame(obj, index=[0])
-        obj_dataframe.rename(columns={"ytUrl": "url"}, inplace=True)
+        obj_dataframe.rename(columns={"id":"id","ytUrl": "url", "game":"game"}, inplace=True)
         response_dataframe = pd.concat([response_dataframe, obj_dataframe], ignore_index=True)
 
     # Filter out duplicate links
     response_dataframe.drop_duplicates(subset=["url"], inplace=True)
 
     # Validate the URLs
-    valid_urls = []
-    for url in response_dataframe["url"]:
-        if (validators.url(url)):
-            valid_urls.append(url)
-    return valid_urls
+    for row in response_dataframe['url']:
+        if not (validators.url(row)):
+            return print("Invalid URL: " + row['url'])
+    return response_dataframe
 
 # def main(requirements):
 def main():
@@ -80,19 +79,20 @@ def main():
     data = response.json()
     response_dataframe = pd.DataFrame(data)
     totalPages = response_dataframe['totalPages']
-    valid_urls = []
-    for page in range(0,totalPages):
+    valid_urls = pd.DataFrame(columns=['id','url','game'])
+    for page in totalPages:
         params["page"] = page
         response = requests.get(endpoint, params=params, headers=headers, timeout=10)
         data = response.json()
-        valid_urls.append(parse_data(data))
+        pd.concat([valid_urls, parse_data(data)], ignore_index=True)
     # Make output directory if it doesn't exist
     download_dir = args['output']
     ensure_dir_exists(Path(download_dir))
     # Save the downloaded links to a file
     valid_urls_df = pd.DataFrame(valid_urls)
+    print(valid_urls_df.columns)
     valid_urls_df.to_csv((os.path.join(Path(download_dir + "links.csv"))),
-                        index=True, columns=["uuid","url","game"])
+                        index=True, columns=["id","url","game"])
 
 if __name__ == "__main__":
     # main(dict(args['requirements']))
