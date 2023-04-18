@@ -17,6 +17,8 @@ parser.add_argument("-e", "--endpoint", help='Target URL On Server', required=Fa
                     default="https://waldo.vision/api/trpc/urls", type=str)
 parser.add_argument("-k", "--key", help='API Key', required=False,
                     default=(os.environ.get("WALDO_API_KEY")), type=str)
+parser.add_argument("-i", "--id", help='API Key ID', required=False, type=str,
+                    default=(os.environ.get("WALDO_API_ID")))
 parser.add_argument("-o", "--output", help='Folder To Store Output', required=True, type=str)
 parser.add_argument("-r", "--requirements", help='Specfications for links retrieved',
                     default='{"minReviews": 25, "rating": 90}', required=False, type=str)
@@ -70,7 +72,7 @@ def main(requirements):
         "requirements": requirements,
         "page": 0
     }
-    headers = {'Authorization': args['key']}
+    headers = {'authorization': args['key'], 'authorization_id': args['id']}
     params_json = json.dumps(params)
     # Make the API request and retrieve the data
     response = requests.get(endpoint, params=params_json, headers=headers, timeout=10)
