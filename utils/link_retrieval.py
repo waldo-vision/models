@@ -40,7 +40,7 @@ def parse_data(data):
 
     response_dataframe = pd.DataFrame(data)
     response_list = response_dataframe['gameplay'].tolist()
-    response_dataframe = pd.DataFrame(columns=['uuid','url'])
+    response_dataframe = pd.DataFrame(columns=['id','url','game'])
     for obj in response_list:
         obj_dataframe = pd.DataFrame(obj, index=[0])
         obj_dataframe.rename(columns={"ytUrl": "url"}, inplace=True)
@@ -56,7 +56,8 @@ def parse_data(data):
             valid_urls.append(url)
     return valid_urls
 
-def main(requirements):
+# def main(requirements):
+def main():
     """
     Pulls URLs from the DB that meet the criteria in the requirements argument
 
@@ -69,7 +70,7 @@ def main(requirements):
 
     endpoint = args['endpoint']
     params = {
-        "requirements": requirements,
+        # "requirements": requirements,
         "page": 0
     }
     headers = {'authorization': args['key'], 'authorization_id': args['id']}
@@ -94,4 +95,5 @@ def main(requirements):
                         index=True, columns=["uuid","url","game"])
 
 if __name__ == "__main__":
-    main(dict(args['requirements']))
+    # main(dict(args['requirements']))
+    main()
