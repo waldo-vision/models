@@ -5,11 +5,11 @@ Validates fetched URLs, and saves them to a csv file
 import argparse
 import json
 import os
-import re
-
 import pandas as pd
 import requests
 import validators
+from common import ensure_dir_exists
+from pathlib import Path
 
 # Setup command line arguments
 parser = argparse.ArgumentParser(description="Get URL's from API and store them locally")
@@ -22,15 +22,6 @@ parser.add_argument("-r", "--requirements", help='Specfications for links retrie
                     default='{"minReviews": 25, "rating": 90}', required=False, type=str)
 
 args = vars(parser.parse_args())
-
-def is_valid_youtube_url(url):
-    """Checks via regex if URL is a valid youtube link"""
-    regex = (
-            r'https?://(?:www\.)?(?:youtube|youtu|youtube-nocookie|music'
-            r'\.youtube|gaming\.youtube|studio\.youtube|content\.googleapis|googlevideo)'
-            r'\.(?:com|be)/(?:watch\?v=|embed/|v/|.+\?v=)?([^\&=%\?]+)'
-            )
-    return bool(re.match(regex, url))
 
 def parse_data(data):
     """
@@ -59,7 +50,7 @@ def parse_data(data):
     # Validate the URLs
     valid_urls = []
     for url in response_dataframe["url"]:
-        if (validators.url(url) and is_valid_youtube_url(url)):
+        if (validators.url(url)):
             valid_urls.append(url)
     return valid_urls
 
@@ -76,22 +67,21 @@ def main(requirements):
 
     endpoint = args['endpoint']
     params = {
-        "auth_token": args['key'],
         "requirements": requirements
     }
+    headers = {'Authorization': args['key']}
     params_json = json.dumps(params)
     # Make the API request and retrieve the data
-    response = requests.get(endpoint, params=params_json, timeout=10)
+    response = requests.get(endpoint, params=params_json, headers=headers, timeout=10)
     data = response.json()
     valid_urls = parse_data(data)
     # Make output directory if it doesn't exist
     download_dir = args['output']
-    if not os.path.exists(download_dir):
-        os.makedirs(download_dir)
+    ensure_dir_exists(Path(download_dir))
     # Save the downloaded links to a file
-        valid_urls_df = pd.DataFrame(valid_urls)
-        valid_urls_df.to_csv((os.path.join(download_dir + "links.csv")),
-                            index=True, columns=["uuid","url"])
+    valid_urls_df = pd.DataFrame(valid_urls)
+    valid_urls_df.to_csv((os.path.join(Path(download_dir + "links.csv"))),
+                        index=True, columns=["uuid","url","game"])
 
 if __name__ == "__main__":
     main(dict(args['requirements']))
