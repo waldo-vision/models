@@ -73,16 +73,16 @@ def main(requirements):
         "page": 0
     }
     headers = {'authorization': args['key'], 'authorization_id': args['id']}
-    params_json = json.dumps(params)
+    
     # Make the API request and retrieve the data
-    response = requests.get(endpoint, params=params_json, headers=headers, timeout=10)
+    response = requests.get(endpoint, params=params, headers=headers, timeout=10)
     data = response.json()
     response_dataframe = pd.DataFrame(data)
     totalPages = response_dataframe['totalPages']
     valid_urls = []
     for page in range(0,totalPages):
         params["page"] = page
-        response = requests.get(endpoint, params=params_json, headers=headers, timeout=10)
+        response = requests.get(endpoint, params=params, headers=headers, timeout=10)
         data = response.json()
         valid_urls.append(parse_data(data))
     # Make output directory if it doesn't exist
