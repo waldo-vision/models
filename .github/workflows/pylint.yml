@@ -7,23 +7,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: '3.11'
+        python-version: [3.11]
     steps:
-    - name: Set up Conda environment with Python ${{ matrix.python-version }}
     - uses: actions/checkout@v3
-    - uses: s-weigand/setup-conda@v1
+    - name: Set up Conda environment with Python ${{ matrix.python-version }}
+      uses: s-weigand/setup-conda@v1
       with:
         python-version: ${{ matrix.python-version }}
         conda-channels: 'conda-forge'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install pylint
-        pip install pandas
-        pip install requests
-        pip install validators
-        pip install opencv-python
         conda env update --file environment.yml
-    - name: Analysing the code with pylint
+    - name: Activate conda environment
+      run: |
+        conda init bash
+        source /home/runner/.bashrc
+        conda activate waldo-dev-env
+    - name: Analyze the code with pylint
       run: |
         pylint $(git ls-files '*.py')
