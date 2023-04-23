@@ -71,6 +71,7 @@ def main():
         valid_urls = pd.DataFrame(columns=['id', 'url', 'game'])
         for page in range(0, total_pages + 1):  # Query all pages sequentially
             params["page"] = page  # Update page number
+            print(f"Requesting page {page}")
             response = requests.get(endpoint, params=params, headers=headers, timeout=10)
             data = response.json()
             valid_urls = pd.concat([valid_urls, parse_data(data)], ignore_index=True)
