@@ -1,10 +1,14 @@
+'''
+Retrieves gameplay URLs from Waldo Vision API and stores them locally in a CSV.
+'''
+
 import argparse
 import os
+from pathlib import Path
 import pandas as pd
 import requests
 import validators
 from common import ensure_dir_exists
-from pathlib import Path
 
 # Set up command line arguments
 parser = argparse.ArgumentParser(description="Get URL's from API and store them locally")
@@ -43,8 +47,8 @@ def parse_data(data):
                 return print("Invalid URL: " + row['url'])
 
         return response_dataframe
-    except Exception as e:
-        print(f"Error while parsing data: {e}")
+    except Exception as error:
+        print(f"Error while parsing data: {error}")
         return pd.DataFrame(columns=['id', 'url', 'game'])
 
 def main():
@@ -85,14 +89,16 @@ def main():
 
         # Save the downloaded links to a file
         valid_urls_df = pd.DataFrame(valid_urls)
-        valid_urls_df.to_csv(os.path.join(Path(download_dir), "links.csv"), index=True, columns=["id", "url", "game"])
+        valid_urls_df.to_csv(os.path.join(Path(download_dir), "links.csv"),
+                             index=True, columns=["id", "url", "game"])
     except requests.exceptions.Timeout as timeout_error:
         print(f"Request timed out: {timeout_error}")
     except requests.exceptions.TooManyRedirects as redirect_error:
         print(f"Too many redirects: {redirect_error}")
     except requests.exceptions.RequestException as request_error:
         print(f"Request failed: {request_error}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    except Exception as other_error:
+        print(f"An error occurred: {other_error}")
+
 if __name__ == "__main__":
     main()
