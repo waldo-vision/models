@@ -1,3 +1,7 @@
+'''
+Code for testing OCR for clip segmentation
+'''
+
 import argparse
 import os
 from pathlib import Path
