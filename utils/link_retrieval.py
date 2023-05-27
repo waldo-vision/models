@@ -7,6 +7,7 @@ import validators
 from common import ensure_dir_exists
 from pathlib import Path
 
+
 # Set up command line arguments
 parser = argparse.ArgumentParser(
     description="Get URL's from API and store them locally")
