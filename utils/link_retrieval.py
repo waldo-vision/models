@@ -59,7 +59,8 @@ def main():
         'minReviews': args['minreviews'],
         "page": 0
     }
-    headers = {'authorization': args['key'], 'authorization_id': args['id']}
+    headers =  {'authorization': args['key'], 'authorization_id': args['id']}
+
 
     # Make the API request and retrieve the data
     try:

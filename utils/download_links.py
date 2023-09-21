@@ -7,6 +7,8 @@ import pandas as pd
 from pytube import YouTube
 from pytube.exceptions import VideoUnavailable, AgeRestrictedError, VideoRegionBlocked, MembersOnly
 from pytube.exceptions import LiveStreamError, RecordingUnavailable, VideoPrivate, RegexMatchError
+from urllib.parse import urlparse, parse_qs
+
 
 # Setup command line arguments
 parser = argparse.ArgumentParser(description="Get URL's from API and store them locally")
@@ -20,13 +22,22 @@ parser.add_argument("-x", "--max_resolution", help='The maximum resolution allow
                     required=False, type=str, default='1080')
 
 args = vars(parser.parse_args())
+def get_youtube_uuid(url):
+    parsed_url = urlparse(url)
+    if 'youtube.com' in parsed_url.netloc:
+        query = parse_qs(parsed_url.query)
+        return query.get("v", [None])[0]
+    elif 'youtu.be' in parsed_url.netloc:
+        return parsed_url.path.lstrip('/')
+    else:
+        return None
 
 def download_best_video(row, min_res, max_res, output_path, max_retries=2):
     """Downloads the Highest resolution, Highest FPS stream of a given video URL from YouTube"""
 
     retry = 0
     while retry <= max_retries:
-        print(f"Downloading UUID: {row['uuid']} | URL: {row['url']}")
+        print(f"Downloading URL: {row['url']}")
 
         # create YT object
         try:
@@ -40,7 +51,7 @@ def download_best_video(row, min_res, max_res, output_path, max_retries=2):
             all_streams = yt_obj.streams.filter(file_extension='mp4',type='video')
         except (VideoUnavailable, AgeRestrictedError, VideoRegionBlocked,
                 LiveStreamError, RecordingUnavailable, MembersOnly, VideoPrivate) as error:
-            print(f"{row['uuid']} is not available for download: {error}")
+            print(f"{row['url']} is not available for download: {error}")
             break
         except KeyError:
             retry += 1
@@ -57,7 +68,7 @@ def download_best_video(row, min_res, max_res, output_path, max_retries=2):
         good_resolutions = [int(res) for res in available_resolutions if int(res) >= int(min_res)]
         good_resolutions = [res for res in good_resolutions if res <= int(max_res)]
         if not good_resolutions:
-            print(f"No streams available matching resolution criteria for {row['uuid']}!")
+            print(f"No streams available matching resolution criteria for {row['url']}!")
             break
 
         # get highest resolution
@@ -70,14 +81,15 @@ def download_best_video(row, min_res, max_res, output_path, max_retries=2):
                             .last()
 
         # download video
+        out_filename = get_youtube_uuid(row['url'])
         best_stream.download(output_path=output_path,
-                            filename=f"{row['uuid']}.mp4",
+                            filename=out_filename,
                             skip_existing=True,
                             max_retries=max_retries)
 
         return True
 
-    print(f"Could not download {row['uuid']}!")
+    print(f"Could not download {row['url']}!")
     return False
 
 def download_videos_from_csv(input_path, output_path, min_res, max_res):
