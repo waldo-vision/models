@@ -17,8 +17,11 @@ from scipy.special import softmax
 from timm.data import Mixup
 from timm.utils import ModelEma, accuracy
 
+import matplotlib.pyplot as plt
 import utils
 
+from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import precision_recall_curve, auc
 
 def train_class_batch(model, samples, target, criterion):
     outputs = model(samples)
@@ -181,15 +184,16 @@ def train_one_epoch(model: torch.nn.Module,
 
 
 @torch.no_grad()
-def validation_one_epoch(data_loader, model, device):
-    criterion = torch.nn.CrossEntropyLoss()
+def validation_one_epoch(data_loader, model, device, make_fig_path=''):
+    criterion = torch.nn.BCEWithLogitsLoss()
 
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Val:'
 
     # switch to evaluation mode
     model.eval()
-
+    all_outputs = []
+    all_targets = []
     for batch in metric_logger.log_every(data_loader, 10, header):
         images = batch[0]
         target = batch[1]
@@ -198,25 +202,64 @@ def validation_one_epoch(data_loader, model, device):
 
         # compute output
         with torch.cuda.amp.autocast():
-            output = model(images)
+            #breakpoint()
+            output = model(images).reshape(-1)
             loss = criterion(output, target)
+        all_outputs.extend(output.detach().cpu().numpy())
+        all_targets.extend(target.cpu().numpy())
 
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        # Convert logits to probabilities using the sigmoid function
+        probs = torch.sigmoid(output)
+
+        # Convert probabilities to binary predictions using 0.5 as the threshold
+        preds = (probs > 0.5).float()
+
+        # Compute binary classification metrics
+        precision = precision_score(target.cpu().numpy(), preds.cpu().numpy())
+        recall = recall_score(target.cpu().numpy(), preds.cpu().numpy())
+        f1 = f1_score(target.cpu().numpy(), preds.cpu().numpy())
 
         batch_size = images.shape[0]
         metric_logger.update(loss=loss.item())
-        metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
-        metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+        metric_logger.meters['precision'].update(precision, n=batch_size)
+        metric_logger.meters['recall'].update(recall, n=batch_size)
+        metric_logger.meters['f1'].update(f1, n=batch_size)
+
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
-    print(
-        '* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
-        .format(
-            top1=metric_logger.acc1,
-            top5=metric_logger.acc5,
-            losses=metric_logger.loss))
 
-    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+    # After loop
+    #breakpoint()
+    all_probs = torch.sigmoid(torch.tensor(all_outputs).float()).cpu().numpy()
+    precision, recall, thresholds = precision_recall_curve(all_targets, all_probs)
+    auc_pr = auc(recall, precision)
+    
+
+    if make_fig_path != '':
+        # Plotting
+        plt.figure(figsize=(10, 7))
+        plt.plot(recall, precision, label=f'AUC-PR = {auc_pr:.4f}')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.title('Precision-Recall Curve with Thresholds')
+
+        # Choose a set of probability thresholds
+        threshold_values = np.linspace(0.1, 0.9, 9)
+        for thresh in threshold_values:
+            idx = (np.abs(thresholds - thresh)).argmin()
+            plt.scatter(recall[idx], precision[idx], label=f'Prob={thresh:.1f}')
+            plt.annotate(f'{thresh:.1f}', (recall[idx], precision[idx]), textcoords="offset points", xytext=(0,5), ha='center')
+
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('cheater_precision_recall_curve.png')
+        plt.show()
+
+
+    ret = {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+    ret["auc-pr"] = auc_pr
+    return ret , all_probs
 
 
 @torch.no_grad()

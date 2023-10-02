@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python train_killshot_pred.py \
+python eval_killshot_pred.py \
         --model vit_base_patch16_224 \
         --data_set killshot \
         --nb_classes 1 \
@@ -27,8 +27,7 @@ python train_killshot_pred.py \
         --warmup_epochs 50 \
         --epochs 1000 \
         --test_num_segment 5 \
-        --test_num_crop 3 \
-		--pred_video ./csg_processed2/o2YxGOJ8d48
+        --test_num_crop 3 $1 $2
 		
 		
 	

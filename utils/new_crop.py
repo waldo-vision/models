@@ -10,14 +10,14 @@ def center_crop(frame, crop_size):
     start_y = y // 2 - (crop_size // 2)
     return frame[start_y:start_y + crop_size, start_x:start_x + crop_size]
 
-def process_videos(src_dir, dest_dir, crop_size):
+def process_videos(src_dir, dest_dir, crop_size, make_train_file=True):
     # Create destination directory if it doesn't exist
     Path(dest_dir).mkdir(parents=True, exist_ok=True)
     if crop_size > 240:
         raise ValueError("Crop size cannot be greater than 240.")
     #max_frames = max([ cv2.VideoCapture(os.path.join(src_dir, filename)).get(cv2.CAP_PROP_FRAME_COUNT) for filename in os.listdir(src_dir)])
     # Create a file to hold the annotations
-    with open("train.csv", "w") as train_csv:
+    with open(os.path.join(dest_dir,"train.csv"), "w") as train_csv:
         for filename in tqdm(os.listdir(src_dir)):
             video_path = os.path.join(src_dir, filename)
             cap = cv2.VideoCapture(video_path)
@@ -33,9 +33,10 @@ def process_videos(src_dir, dest_dir, crop_size):
             annotation = f"{frame_dir} {total_frames-1} 0\n"
 
             # Write annotation to train.csv
-            train_csv.write(annotation)
+            if make_train_file: train_csv.write(annotation)
 
             frame_number = 0
+            pbar = tqdm(total=total_frames)
             while True:
                 ret, frame = cap.read()
                 if not ret:
@@ -53,6 +54,7 @@ def process_videos(src_dir, dest_dir, crop_size):
                 cv2.imwrite(img_path, cropped_frame)
 
                 frame_number += 1
+                pbar.update(1)
 
             cap.release()
 

@@ -10,18 +10,7 @@ from pytube.exceptions import LiveStreamError, RecordingUnavailable, VideoPrivat
 from urllib.parse import urlparse, parse_qs
 
 
-# Setup command line arguments
-parser = argparse.ArgumentParser(description="Get URL's from API and store them locally")
-parser.add_argument("-i", "--input", help="Path to CSV of Youtube URLs to download",
-                    required=True, type=str)
-parser.add_argument("-o", "--output", help='Folder To Store Downloaded Videos',
-                    required=True, type=str)
-parser.add_argument("-n", "--min_resolution", help='The minimum resolution allowed',
-                    required=False, type=str, default='360')
-parser.add_argument("-x", "--max_resolution", help='The maximum resolution allowed',
-                    required=False, type=str, default='1080')
 
-args = vars(parser.parse_args())
 def get_youtube_uuid(url):
     parsed_url = urlparse(url)
     if 'youtube.com' in parsed_url.netloc:
@@ -81,7 +70,7 @@ def download_best_video(row, min_res, max_res, output_path, max_retries=2):
                             .last()
 
         # download video
-        out_filename = get_youtube_uuid(row['url'])
+        out_filename = get_youtube_uuid(row['url']+".mp4")
         best_stream.download(output_path=output_path,
                             filename=out_filename,
                             skip_existing=True,
@@ -92,7 +81,7 @@ def download_best_video(row, min_res, max_res, output_path, max_retries=2):
     print(f"Could not download {row['url']}!")
     return False
 
-def download_videos_from_csv(input_path, output_path, min_res, max_res):
+def download_videos_from_csv(input_path, output_path, min_res=360, max_res=1080):
     """Reads URLs into dataframe and downloads each one"""
 
     # read csv into dataframe
@@ -111,6 +100,20 @@ def download_videos_from_csv(input_path, output_path, min_res, max_res):
     print('Downloads Complete')
 
 def main():
+
+    # Setup command line arguments
+    parser = argparse.ArgumentParser(description="Get URL's from API and store them locally")
+    parser.add_argument("-i", "--input", help="Path to CSV of Youtube URLs to download",
+                        required=True, type=str)
+    parser.add_argument("-o", "--output", help='Folder To Store Downloaded Videos',
+                        required=True, type=str)
+    parser.add_argument("-n", "--min_resolution", help='The minimum resolution allowed',
+                        required=False, type=str, default='360')
+    parser.add_argument("-x", "--max_resolution", help='The maximum resolution allowed',
+                        required=False, type=str, default='1080')
+    args = vars(parser.parse_args())
+
+
     """Download all YouTube URLs from an input CSV"""
     # read csv into dataframe
     download_videos_from_csv(args['input'],
